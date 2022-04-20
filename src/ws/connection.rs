@@ -38,9 +38,9 @@ impl MyWs {
 	}
 }
 
-pub async fn get_message(req: HttpRequest, stream: web::Payload) -> impl Responder {
-	// client.handle(ws::Message::Text(ByteString::from(String::from("hello"))));
-}
+// pub async fn get_message(req: HttpRequest, stream: web::Payload) -> impl Responder {
+// 	// client.handle(ws::Message::Text(ByteString::from(String::from("hello"))));
+// }
 
 pub async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, actix_web::Error> {
 	let resp = ws::start(MyWs {}, &req, stream);
