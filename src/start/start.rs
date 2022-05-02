@@ -1,42 +1,54 @@
-use std::fs;
-use std::io::{self, stdin, stdout, Write};
+use druid::widget::{Button, Flex, Label, TextBox};
+use druid::{
+    AppLauncher, Data, ExtEventSink, Lens, LocalizedString, PlatformError, Widget, WidgetExt,
+    WindowDesc,
+};
+use futures_util::task::Spawn;
+use std::future::Future;
+use std::io::BufRead;
+use std::pin::Pin;
+use std::thread;
 
-pub fn start() -> Vec<String> {
-    let mut message_user = String::new();
-    let mut result = Vec::new();
-    let message_app = [
-        "Добавьте нужные видео в папку static и нажмите Enter".to_string(),
-        "Добавлены все нужные файлы?\n-> Y/N (Yes/No)".to_string(),
-    ];
-    let mut count = 0;
-    loop {
-        println!("{}", &message_app[count]);
-        if count == 1 {
-            let mut dir = Vec::new();
-            for entry in fs::read_dir(std::path::Path::new("./static")).unwrap() {
-                dir.push(
-                    entry
-                        .unwrap()
-                        .path()
-                        .to_str()
-                        .unwrap()
-                        .replace("./static\\", ""),
-                );
-            }
-        }
-        stdin()
-            .read_line(&mut message_user)
-            .expect("Произошла ошибка");
-        if &message_user.trim() == &String::from("") {
-            result.push("default".to_string());
-        } else {
-            result.push(message_user.trim().to_string())
-        }
-        if count + 1 == message_app.len() {
-            break;
-        }
-        count += 1;
+#[path = "../stream/video.rs"]
+mod stream;
+
+pub fn start() -> Result<(), PlatformError> {
+    let main_window = WindowDesc::new(ui_builder);
+    let data = ForStartApp {
+        data: "".to_string(),
+    };
+    AppLauncher::with_window(main_window).launch(data)
+}
+#[derive(Clone, Data, Lens)]
+struct ForStartApp {
+    data: String,
+}
+
+impl ForStartApp {
+    fn start_connection_to_server(&self) {
+
     }
-    println!("Started to 127.0.0.1:8000");
-    result
+}
+
+fn ui_builder() -> impl Widget<ForStartApp> {
+    // The label text will be computed dynamically based on the current locale and count
+    let label = Label::new(String::from("Start app")).padding(5.0).center();
+    let dir_list = Label::new(stream::get_directory().join("\n"))
+        .padding(5.0)
+        .center();
+    let address_api = TextBox::new()
+        .with_placeholder("URL to server")
+        .fix_width(200.0)
+        .lens(ForStartApp::data);
+    let button = Button::new("Start")
+        .on_click(|_, data: &mut ForStartApp, _| {
+            data.start_connection_to_server();
+        })
+        .padding(5.0);
+
+    Flex::column()
+        .with_child(label)
+        .with_child(dir_list)
+        .with_child(button)
+        .with_child(address_api)
 }
