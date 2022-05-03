@@ -1,3 +1,5 @@
+use actix_web::rt::task::JoinHandle;
+use futures::Future;
 use websocket;
 use std::{fs, thread};
 use actix_web::web::{Bytes, BytesMut};
@@ -10,7 +12,7 @@ use websocket::{Message, OwnedMessage};
 use serde_json::{json};
 use serde::{Serialize, Deserialize};
 use futures::executor::block_on;
-
+use tokio;
 
 #[path = "../stream/video.rs"] mod stream;
 
@@ -67,7 +69,7 @@ pub fn connected_to_server_ws(addres: String) {
 					if message_text.starts_with("get ") {
 						let data_json: stream::DataFile = serde_json::from_str(message_text.split("get ").collect::<Vec<&str>>()[1]).unwrap();
                         println!("{:?}", data_json);
-                        block_on(test_send(data_json));
+                        async_fn_run(data_json);
 					}
 				}
 				// Say what we received
@@ -81,8 +83,9 @@ pub fn connected_to_server_ws(addres: String) {
 	println!("Exited");
 }
 
-fn test_send(data_json: stream::DataFile) -> impl futures::Future<Output = ()>{
-    async move{
-        stream::get_byte_to_server(String::from("test.txt"), data_json).await.unwrap();
-    }
+fn async_fn_run(data: stream::DataFile){
+    let rt = tokio::runtime::Runtime::new().unwrap();
+    let handle = rt.handle();
+    let sync_fn = stream::get_byte_to_server(String::from("sample.mp4"), data);
+    handle.block_on(sync_fn);
 }
