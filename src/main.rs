@@ -1,25 +1,10 @@
 mod stream;
 mod connection;
-
-use actix_web::web::Bytes;
-use druid::widget::{Button, Flex, Label, TextBox, Checkbox, LabelText};
-use druid::{AppLauncher, Data, ExtEventSink, KeyEvent, Lens, LocalizedString, MouseEvent, PlatformError, Widget, WidgetExt, WindowDesc, Color, EventCtx, Event, Env};
-use futures_util::task::Spawn;
-use futures_util::{FutureExt, SinkExt as _, StreamExt as _};
-use reqwest::{self, RequestBuilder};
-use serde_json::{json, };
-use serde::{Serialize, Deserialize};
-use tokio::sync::mpsc::Sender;
-use std::collections::HashMap;
-use std::fmt::Error;
-use std::future::Future;
-use std::io::BufRead;
-use std::pin::Pin;
-use std::{io, thread};
-use std::process::Output;
-use std::sync::Arc;
-use std::fs;
-
+mod ui;
+use ui::struct_ui::*;
+use druid::Color;
+use druid::widget::{Button, Flex, Label, TextBox, Checkbox};
+use druid::{AppLauncher, PlatformError, Widget, WidgetExt, WindowDesc};
 
 fn main() -> Result<(), PlatformError> {
     let main_window = WindowDesc::new(ui_builder).title("Black box").window_size((760.0, 680.0));
@@ -35,58 +20,9 @@ fn main() -> Result<(), PlatformError> {
     AppLauncher::with_window(main_window).launch(data)
 }
 
-#[derive(Clone, Data, Lens, Debug, Deserialize, Serialize)]
-struct ForStartApp {
-    url_api: String,
-    token: String,
-    login: String,
-    password: String,
-    save: bool,
-    lable: String
-}
-
-#[derive(Deserialize, Serialize)]
-struct Config {
-    url_api: String,
-    token: String,
-    login: String,
-    password: String,
-}
-
-impl ForStartApp {
-
-    fn is_config() -> Config {
-        let file =  fs::read_to_string("./config/user.json")
-            .unwrap_or_else(|_| String::from("{ \"url_api\": \"\", \"token\": \"\", \"login\": \"\", \"password\": \"\" }"));
-            Config { ..serde_json::from_str(&file).unwrap() }
-    }
-
-    fn get_config(&self) -> Config {
-        Config {
-            url_api: self.url_api.clone(),
-            token:  self.token.clone(),
-            login: self.login.clone(),
-            password: self.password.clone(),
-        }
-    }
-
-    fn save_field(&self){
-        if self.save {
-            fs::write("./config/user.json", serde_json::to_string(&self.get_config()).unwrap()).unwrap();
-        }
-    }
-
-    fn set_lable(&mut self, string: String){
-        self.lable = string;
-    }
-
-    fn connection(&self){
-        let addres = self.url_api.clone();
-        thread::spawn(move || connection::to_server::connected_to_server_ws(addres));
-    }
-}
 
 fn ui_builder() -> impl Widget<ForStartApp> {
+    let mut layout = Flex::column();
     let label = Label::new(|data: &String, _env: &_| data.clone())
         .padding(5.0)
         .center()
@@ -99,7 +35,13 @@ fn ui_builder() -> impl Widget<ForStartApp> {
         .fix_width(200.0)
         .padding(2.)
         .lens(ForStartApp::url_api);
+        let add_new_url_connect = Button::from_label(Label::new(String::from("+")).with_text_color(Color::grey(0.5)))
+            .on_click(|_,data: &mut ForStartApp,_|{
 
+            });
+        let test_btn = Button::new("Connect");
+        let button_connect = Flex::row().with_child(add_new_url_connect).with_child(address_api).with_child(test_btn);
+        layout.add_flex_child(button_connect, 1.0);
     let secret_token = TextBox::new()
         .with_placeholder("Your secret token")
         .fix_width(200.0)
@@ -123,7 +65,6 @@ fn ui_builder() -> impl Widget<ForStartApp> {
     
     let button = Button::new("Start")
         .on_click(|ctx, data: &mut ForStartApp, env| {
-            let address = String::from(data.url_api.clone());
             data.set_lable(String::from("App load..."));
             data.connection();
             data.set_lable(String::from("App started"));
@@ -132,17 +73,15 @@ fn ui_builder() -> impl Widget<ForStartApp> {
         .padding(5.0)
         .fix_size(160., 60.);
     
-    
 
     let checkbox = Checkbox::new("Save profile")
     .center()
     .lens(ForStartApp::save);
 
-    Flex::column()
-        .with_child(label)
+    
+    layout.with_child(label)
         .with_child(button)
         .with_child(checkbox)
-        .with_child(address_api)
         .with_child(secret_token)
         .with_child(login)
         .with_child(password)

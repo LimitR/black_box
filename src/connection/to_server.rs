@@ -1,12 +1,8 @@
-use actix_web::rt::task::JoinHandle;
-use futures::Future;
 use websocket;
 use std::{fs, thread};
 use actix_web::web::{Bytes, BytesMut};
 use std::io::{SeekFrom, stdin};
 use std::sync::mpsc::channel;
-use reqwest::header::HeaderValue;
-use reqwest::Response;
 use websocket::client::ClientBuilder;
 use websocket::{Message, OwnedMessage};
 use serde_json::{json};
