@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    background-color: rgb(73, 73, 73);
+}
+
+.divMain {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.inputs {
+    flex-direction: column;
+    justify-content: center;
+}
