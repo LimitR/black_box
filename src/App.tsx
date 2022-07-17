@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import { invoke, process } from '@tauri-apps/api'
+import Imputs from './Components/Imputs'
+
 function App() {
   const [text, setText] = useState('')
 
@@ -25,15 +27,10 @@ function App() {
   return (
     <div className='divMain'>
       <p>Black Box</p>
-      <button>Start</button>
-        <input type={"checkbox"}></input>
-        <p>Save profile</p>
       <div className='inputs'>
-        <input type={"text"} placeholder="URL to server"></input>
-        <input type={"text"} placeholder="Your secret token"></input>
-        <input type={"text"} placeholder="Login"></input>
-        <input type={"text"} placeholder="Password"></input>
+     <Imputs />
       </div>
+      <button>Start</button>
       <p>Vileos for loading:</p>
     </div>
   )

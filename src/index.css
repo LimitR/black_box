@@ -1,18 +1,24 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 body {
     background-color: rgb(73, 73, 73);
 }
 
 .divMain {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    margin: 0 auto;
+}
+
+.divMain p {
+    margin: auto;
+    margin-bottom: 15px;
 }
 
 .inputs {
     flex-direction: column;
     justify-content: center;
+}
+
+.imputStyle {
+    /* display: flex;
+    flex-direction: column;
+    justify-content: center; */
+    
 }
